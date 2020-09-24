@@ -1,5 +1,5 @@
 %{
-numbers as individual objecst so they can be turned on and off individually
+numbers as individual objecta so they can be turned on and off individually
 
 move preview while dragging
 - include a number showing the count
@@ -14,10 +14,13 @@ undo button
 
 support for row/col with no numbers
 
-numDetect() and randGen() haev some repeated code about finding numbers
+numDetect() and randGen() have some repeated code about finding numbers
 that could probably be turned into a function
 
 numDetect() shouldn't have to check every row/column every mouseclick
+
+ui to change grid size
+- allow rectangles?
 %}
 function [ ] = Picross( )
 	f = [];
@@ -263,21 +266,13 @@ function [ ] = Picross( )
 		vText = matlab.graphics.primitive.Text.empty;
 		hText = matlab.graphics.primitive.Text.empty;
 		for i = 1:n
-			if ~isempty(vertNums{i})
-				str = {};
-				for j = 1:length(vertNums{i})
-					str{j,1} = num2str(vertNums{i}(j));
-				end
-				vText(i) = text(i+0.5,0.9,str,'VerticalAlignment','bottom');
-			else
-				
+			str = {};
+			for j = 1:length(vertNums{i})
+				str{j,1} = num2str(vertNums{i}(j));
 			end
+			vText(i) = text(i+0.5,0.9,str,'VerticalAlignment','bottom');
 			
-			if ~isempty(horNums{i})
-				hText(i) = text(0.9,i+0.5,num2str(horNums{i}),'HorizontalAlignment','right');
-			else
-				
-			end
+			hText(i) = text(0.9,i+0.5,num2str(horNums{i}),'HorizontalAlignment','right');
 		end
 		
 % 		if ax.OuterPosition(4) > ax.Position(4)
@@ -382,6 +377,7 @@ function [ ] = Picross( )
 			'FontSize',14,...
 			'Callback',@newGame);
 		
+		% makes the cursor look vaguely like a pencil
 % 		asdf = nan*ones(16);
 % 		asdf([1,18,19,20,34,35,37,38,50,52,53,55,67,68,69,70,72,83,85,86,87,89,100,102,103,104,106,117,119,120,121,123,134,136,137,138,140,151,153,154,155,157,168,170,171,172,174,185,187,188,189,191,202,204,205,206,208,219,221,222,223,224,236,238,239,253,254]) = 1;
 % 		asdf([36,51,54,71,84,88,101,105,118,122,135,139,152,156,169,173,186,190,203,207,220,234]) = 2;
