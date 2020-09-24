@@ -44,6 +44,8 @@ function [ ] = Picross( )
 		
 		n = 10;
 		randGen();
+% 		vertNums
+% 		horNums
 		
 % 		vertNums = {[3 2 1] [1 2 2 2] [3 1 2 2] [3 2 3] [4 3] [2 2 2] [1 1 3 1] [2 2 2 ] [1 1 4] [1 1 2 2] [1 1 2 3] [1 1 2 2] [1 1 2 1] [1 1 2 2] [1 1 2 4]};
 % 		horNums = {[2] [1 8] [2 3] [1 3] [5 8] [2 4] [4 ] [3 3] [2 7] [1 6] [5 2] [4 2 2] [3 2 1] [3 2 1] [2 1 2 1]};
@@ -244,6 +246,7 @@ function [ ] = Picross( )
 		numDetect();
 	end
 	
+	% creates the grid and clues
 	function [] = build()
 		pGrid = gobjects(n);
 		for r = 1:n
@@ -263,16 +266,17 @@ function [ ] = Picross( )
 		
 		
 		%add number text
-		vText = matlab.graphics.primitive.Text.empty;
-		hText = matlab.graphics.primitive.Text.empty;
+		vText = cell(1,n);
+		hText = cell(1,n);
 		for i = 1:n
-			str = {};
-			for j = 1:length(vertNums{i})
-				str{j,1} = num2str(vertNums{i}(j));
+			lv = length(vertNums{i});
+			for j = 1:lv
+				vText{i}(j) = text(i + 0.5,(j - lv + 1.5)*0.5,num2str(vertNums{i}(j)),'VerticalAlignment','bottom');
 			end
-			vText(i) = text(i+0.5,0.9,str,'VerticalAlignment','bottom');
-			
-			hText(i) = text(0.9,i+0.5,num2str(horNums{i}),'HorizontalAlignment','right');
+			lh = length(horNums{i});
+			for j = 1:lh
+				hText{i}(j) = text((j - lh + 1.0)*0.5, i + 0.75,num2str(horNums{i}(j)),'VerticalAlignment','bottom');
+			end
 		end
 		
 % 		if ax.OuterPosition(4) > ax.Position(4)
