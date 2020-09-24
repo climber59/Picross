@@ -13,6 +13,11 @@ number text shouldnt go off screen
 undo button
 
 support for row/col with no numbers
+
+numDetect() and randGen() haev some repeated code about finding numbers
+that could probably be turned into a function
+
+numDetect() shouldn't have to check every row/column every mouseclick
 %}
 function [ ] = Picross( )
 	f = [];
@@ -42,9 +47,12 @@ function [ ] = Picross( )
 
 		
 		build();
+		numDetect();
 		winner = false;
 	end
 	
+	% checks if a row or column is completed and will fill in x's, dim the
+	% hints, and check if the puzzle is completed
 	function [] = numDetect()
 		fcn = @(x) x.UserData.filled || x.UserData.x;
 		
@@ -55,6 +63,7 @@ function [ ] = Picross( )
 			% go down a column
 			j = 1;
 			ind = 1;
+			cvertNums{i} = [];
 			while j <= n
 				c = 0;
 				while j<=n && pGrid(j,i).UserData.filled
@@ -67,10 +76,14 @@ function [ ] = Picross( )
 				end
 				j = j + 1;
 			end
+			if isempty(cvertNums{i})
+				cvertNums{i} = 0;
+			end
 			
 			% go right a row
 			j = 1;
 			ind = 1;
+			chorNums{i} = [];
 			while j <= n
 				c = 0;
 				while j<=n && pGrid(i,j).UserData.filled
@@ -83,12 +96,8 @@ function [ ] = Picross( )
 				end
 				j = j + 1;
 			end
-			
-			if length(cvertNums) < i
-				cvertNums{i} = [];
-			end
-			if length(chorNums) < i
-				chorNums{i} = [];
+			if isempty(chorNums{i})
+				chorNums{i} = 0;
 			end
 		end
 		
@@ -292,7 +301,6 @@ function [ ] = Picross( )
 		if sum(sum(ansKey)) < (n^2)/2
 			ansKey = ~ansKey;
 		end
-		ansKey = [zeros(n,1), [zeros(1,n-1); randi(2,n-1,n-1)-1]];
 		
 		% get numbers
 		vertNums = {};
