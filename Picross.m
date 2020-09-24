@@ -12,12 +12,12 @@ number text shouldnt go off screen
 
 undo button
 
-support for row/col with no numbers
-
 numDetect() and randGen() have some repeated code about finding numbers
 that could probably be turned into a function
 
 numDetect() shouldn't have to check every row/column every mouseclick
+- a single click could fill a whole row, so it will always have to check
+many things
 
 ui to change grid size
 - allow rectangles?
@@ -44,6 +44,8 @@ function [ ] = Picross( )
 		
 		n = 10;
 		randGen();
+% 		vertNums
+% 		horNums
 		
 % 		vertNums = {[3 2 1] [1 2 2 2] [3 1 2 2] [3 2 3] [4 3] [2 2 2] [1 1 3 1] [2 2 2 ] [1 1 4] [1 1 2 2] [1 1 2 3] [1 1 2 2] [1 1 2 1] [1 1 2 2] [1 1 2 4]};
 % 		horNums = {[2] [1 8] [2 3] [1 3] [5 8] [2 4] [4 ] [3 3] [2 7] [1 6] [5 2] [4 2 2] [3 2 1] [3 2 1] [2 1 2 1]};
@@ -57,7 +59,10 @@ function [ ] = Picross( )
 	% checks if a row or column is completed and will fill in x's, dim the
 	% hints, and check if the puzzle is completed
 	function [] = numDetect()
-		fcn = @(x) x.UserData.filled || x.UserData.x;
+		isMarked = @(y) y.UserData.filled || y.UserData.x;
+		isFilled = @(y) y.UserData.filled;
+		isXed = @(y) y.UserData.x;
+		
 		
 		% get numbers
 		cvertNums = {};
@@ -74,8 +79,10 @@ function [ ] = Picross( )
 					j = j + 1;
 				end
 				if c~=0
-					cvertNums{i}(ind) = c; % change to cell, edit array in each, a{1}(2) works
+					cvertNums{i}(ind) = c;
 					ind = ind + 1;
+				elseif c == 0 && ind == 1
+					
 				end
 				j = j + 1;
 			end
@@ -103,10 +110,14 @@ function [ ] = Picross( )
 				chorNums{i} = 0;
 			end
 		end
+% 		cvertNums
+% 		chorNums
+% 		m = arrayfun(isFilled,pGrid(1,:)).*(1:n)
+% 		find(m)
 		
 		%fill x's
 		for i = 1:n
-			%check col
+			% ===================== check col =====================
 			if length(cvertNums{i})==length(vertNums{i}) && all(cvertNums{i} == vertNums{i})
 				for j = 1:n
 					if ~pGrid(j,i).UserData.filled && ~pGrid(j,i).UserData.x
@@ -114,13 +125,65 @@ function [ ] = Picross( )
 						pGrid(j,i).UserData.xT.Visible = 'on';
 					end
 				end
-				vText(i).Color = 0.75*ones(1,3);%[0.5 0.5 0.5];
-			elseif all(arrayfun(fcn,pGrid(:,i)))
-				vText(i).Color = [1 0 0];
-			else
-				vText(i).Color = [0 0 0];
+				for j = 1:length(vText{i})
+					vText{i}(j).Color = 0.75*ones(1,3);
+				end
+			elseif all(arrayfun(isMarked,pGrid(:,i))) % all filled, doesn't match
+				for j = 1:length(vText{i})
+					vText{i}(j).Color = [1 0 0];
+				end
+			else % not all filled
+				for j = 1:length(vText{i})
+					vText{i}(j).Color = [0 0 0]; % assume black
+				end
+				j = 1;
+				curNum = 1;
+				while j <= n && isMarked(pGrid(j,i))
+					count = 0;
+					while j <= n && isFilled(pGrid(j,i))
+						count = count + 1;
+						j = j + 1;
+					end
+					if count == vertNums{i}(curNum)
+						% add x, grey out
+						vText{i}(curNum).Color = 0.75*ones(1,3);
+						if j <= n % adding the x may make fixing mistakes harder
+							pGrid(j,i).UserData.x = true;
+							pGrid(j,i).UserData.xT.Visible = 'on';
+						end
+						curNum = curNum + 1;
+					elseif count > vertNums{i}(curNum) % could be turn red
+						j = n;
+					else
+						j = j + 1;
+					end
+					
+				end
+				j = n;
+				curNum = length(vertNums{i});
+				while j >= 1 && isMarked(pGrid(j,i))
+					count = 0;
+					while j >= 1 && isFilled(pGrid(j,i))
+						count = count + 1;
+						j = j - 1;
+					end
+					if count == vertNums{i}(curNum)
+						% add x, grey out
+						vText{i}(curNum).Color = 0.75*ones(1,3);
+						if j >= 1 % adding the x may make fixing mistakes harder for the user
+							pGrid(j,i).UserData.x = true;
+							pGrid(j,i).UserData.xT.Visible = 'on';
+						end
+						curNum = curNum - 1;
+					elseif count > vertNums{i}(curNum) % could be turn red
+						j = 0;
+					else
+						j = j - 1;
+					end
+				end
 			end
-			%check row
+			
+			% ============================= check row =====================
 			if length(chorNums{i})==length(horNums{i}) && all(chorNums{i} == horNums{i})
 				for j = 1:n
 					if ~pGrid(i,j).UserData.filled && ~pGrid(i,j).UserData.x
@@ -128,11 +191,62 @@ function [ ] = Picross( )
 						pGrid(i,j).UserData.xT.Visible = 'on';
 					end
 				end
-				hText(i).Color = 0.75*ones(1,3);
-			elseif all(arrayfun(fcn,pGrid(i,:)))
-				hText(i).Color = [1 0 0];
+				for j = 1:length(hText{i})
+					hText{i}(j).Color = 0.75*ones(1,3); % grey out
+				end
+			elseif all(arrayfun(isMarked,pGrid(i,:)))
+				for j = 1:length(hText{i})
+					hText{i}(j).Color = [1 0 0];
+				end
 			else
-				hText(i).Color = [0 0 0];
+				for j = 1:length(hText{i})
+					hText{i}(j).Color = [0 0 0]; % assume black
+				end
+				j = 1;
+				curNum = 1;
+				while j <= n && isMarked(pGrid(i,j))
+					count = 0;
+					while j <= n && isFilled(pGrid(i,j))
+						count = count + 1;
+						j = j + 1;
+					end
+					if count == horNums{i}(curNum)
+						% add x, grey out
+						hText{i}(curNum).Color = 0.75*ones(1,3);
+						if j <= n % adding the x may make fixing mistakes harder
+							pGrid(i,j).UserData.x = true;
+							pGrid(i,j).UserData.xT.Visible = 'on';
+						end
+						curNum = curNum + 1;
+					elseif count > horNums{i}(curNum) % could be turn red
+						j = n;
+					else
+						j = j + 1;
+					end
+					
+				end
+				j = n;
+				curNum = length(horNums{i});
+				while j >= 1 && isMarked(pGrid(i,j))
+					count = 0;
+					while j >= 1 && isFilled(pGrid(i,j))
+						count = count + 1;
+						j = j - 1;
+					end
+					if count == horNums{i}(curNum)
+						% add x, grey out
+						hText{i}(curNum).Color = 0.75*ones(1,3);
+						if j >= 1 % adding the x may make fixing mistakes harder for the user
+							pGrid(i,j).UserData.x = true;
+							pGrid(i,j).UserData.xT.Visible = 'on';
+						end
+						curNum = curNum - 1;
+					elseif count > horNums{i}(curNum) % could be turn red
+						j = 0;
+					else
+						j = j - 1;
+					end
+				end
 			end
 		end
 		
@@ -244,6 +358,7 @@ function [ ] = Picross( )
 		numDetect();
 	end
 	
+	% creates the grid and clues
 	function [] = build()
 		pGrid = gobjects(n);
 		for r = 1:n
@@ -263,16 +378,17 @@ function [ ] = Picross( )
 		
 		
 		%add number text
-		vText = matlab.graphics.primitive.Text.empty;
-		hText = matlab.graphics.primitive.Text.empty;
+		vText = cell(1,n);
+		hText = cell(1,n);
 		for i = 1:n
-			str = {};
-			for j = 1:length(vertNums{i})
-				str{j,1} = num2str(vertNums{i}(j));
+			lv = length(vertNums{i});
+			for j = 1:lv
+				vText{i}(j) = text(i + 0.5,(j - lv + 1.5)*0.5,num2str(vertNums{i}(j)),'VerticalAlignment','bottom');
 			end
-			vText(i) = text(i+0.5,0.9,str,'VerticalAlignment','bottom');
-			
-			hText(i) = text(0.9,i+0.5,num2str(horNums{i}),'HorizontalAlignment','right');
+			lh = length(horNums{i});
+			for j = 1:lh
+				hText{i}(j) = text((j - lh + 1.0)*0.5, i + 0.75,num2str(horNums{i}(j)),'VerticalAlignment','bottom');
+			end
 		end
 		
 % 		if ax.OuterPosition(4) > ax.Position(4)
