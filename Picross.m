@@ -63,7 +63,8 @@ function [ ] = Picross( )
 		isFilled = @(y) y.UserData.filled;
 		isXed = @(y) y.UserData.x;
 		
-		
+% 		'remember to delete the clc'
+% 		clc
 		% get numbers
 		cvertNums = cell(1,n);
 		chorNums = cell(n,1);
@@ -110,10 +111,6 @@ function [ ] = Picross( )
 				chorNums{i} = 0;
 			end
 		end
-% 		cvertNums
-% 		chorNums
-% 		m = arrayfun(isFilled,pGrid(1,:)).*(1:n)
-% 		find(m)
 		
 		%fill x's
 		for i = 1:n
@@ -126,13 +123,14 @@ function [ ] = Picross( )
 					end
 				end
 				for j = 1:length(vText{i})
-					vText{i}(j).Color = 0.75*ones(1,3);
+					vText{i}(j).Color = 0.75*ones(1,3); % turn them all grey
 				end
-			elseif all(arrayfun(isMarked,pGrid(:,i)))... % all filled, doesn't match
-					|| length(cvertNums{i}) > length(vertNums{i})... % too many "clusters"
-					|| sum(vertNums{i}) > sum(vertNums{i})  % too many squares filled
+			elseif (length(cvertNums{i}) == length(vertNums{i}) && sum(cvertNums{i}) == sum(vertNums{i}) && ~all(cvertNums{i} == vertNums{i}))... % correct # of clusters and squares, but they don't match the clues
+					|| all(arrayfun(isMarked,pGrid(:,i)))... % all filled, doesn't match
+					|| (length(cvertNums{i}) > length(vertNums{i}) && sum(cvertNums{i}) >= sum(vertNums{i}))... % too many clusters
+					|| sum(cvertNums{i}) > sum(vertNums{i})  % too many squares filled
 				for j = 1:length(vText{i})
-					vText{i}(j).Color = [1 0 0];
+					vText{i}(j).Color = [1 0 0]; % turn them all red
 				end
 			else % not all filled
 				for j = 1:length(vText{i})
@@ -154,14 +152,14 @@ function [ ] = Picross( )
 							pGrid(j,i).UserData.xT.Visible = 'on';
 						end
 						curNum = curNum + 1;
-					elseif count > vertNums{i}(curNum) % could be turn red
-						j = n;
+					elseif count ~= 0 % stop if it doesn't match
+						j = n + 1;
 					else
-						j = j + 1;
+						j = j + 1; % count == 0 when the square is an 'x'
 					end
 					
 				end
-				j = n;
+				j = n; % check from the other direction now
 				curNum = length(vertNums{i});
 				while j >= 1 && isMarked(pGrid(j,i))
 					count = 0;
@@ -177,7 +175,7 @@ function [ ] = Picross( )
 							pGrid(j,i).UserData.xT.Visible = 'on';
 						end
 						curNum = curNum - 1;
-					elseif count > vertNums{i}(curNum) % could be turn red
+					elseif count ~= 0
 						j = 0;
 					else
 						j = j - 1;
@@ -196,8 +194,9 @@ function [ ] = Picross( )
 				for j = 1:length(hText{i})
 					hText{i}(j).Color = 0.75*ones(1,3); % grey out
 				end
-			elseif all(arrayfun(isMarked,pGrid(i,:)))... % all filled, doesn't match
-					|| length(chorNums{i}) > length(horNums{i})... % too many "clusters"
+			elseif (length(chorNums{i})==length(horNums{i}) && sum(chorNums{i}) == sum(horNums{i})  && ~all(chorNums{i} == horNums{i}))... % correct # of clusters and squares, but they don't match the clues
+					|| all(arrayfun(isMarked,pGrid(i,:)))... % all filled, doesn't match
+					|| (length(chorNums{i}) > length(horNums{i}) && sum(chorNums{i}) >= sum(horNums{i}))... % too many "clusters"
 					|| sum(chorNums{i}) > sum(horNums{i})  % too many squares filled
 				for j = 1:length(hText{i})
 					hText{i}(j).Color = [1 0 0];
@@ -222,12 +221,11 @@ function [ ] = Picross( )
 							pGrid(i,j).UserData.xT.Visible = 'on';
 						end
 						curNum = curNum + 1;
-					elseif count > horNums{i}(curNum) % could be turn red
-						j = n;
+					elseif count ~= 0
+						j = n + 1;
 					else
 						j = j + 1;
 					end
-					
 				end
 				j = n;
 				curNum = length(horNums{i});
@@ -245,7 +243,7 @@ function [ ] = Picross( )
 							pGrid(i,j).UserData.xT.Visible = 'on';
 						end
 						curNum = curNum - 1;
-					elseif count > horNums{i}(curNum) % could be turn red
+					elseif count ~= 0
 						j = 0;
 					else
 						j = j - 1;
