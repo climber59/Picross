@@ -251,19 +251,15 @@ function [ ] = Picross( )
 				end
 			end
 		end
-		
-		% win check
-		w = true;
-		i = 1;
-		while i<=n && w
-			w = (length(cvertNums{i})==length(vertNums{i}) && all(cvertNums{i} == vertNums{i})) && (length(chorNums{i})==length(horNums{i}) && all(chorNums{i} == horNums{i}));
-			i = i + 1;
-		end
-		if w
-			winner = true;
+	end
+	
+	% win check
+	function [] = winCheck()
+		isGrey = @(y) y.Color(1) == 0.75;
+		winner = all(arrayfun(@(i) all(arrayfun(isGrey,vText{i})),1:n)) && all(arrayfun(@(i) all(arrayfun(isGrey,hText{i})),1:n)); % checks that all hints are greyed out
+		if winner
 			patch(1.5+(n-1)*[0 9 37 87 100 42]/100,1.5+(n-1)*[72 59 78 3 12 100]/100,[0 1 0],'FaceAlpha',0.5,'EdgeColor','none');
 		end
-		
 	end
 	
 	function [] = click(~,~)
@@ -358,6 +354,7 @@ function [ ] = Picross( )
 		end
 		
 		numDetect();
+		winCheck();
 	end
 	
 	% creates the grid and clues
