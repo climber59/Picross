@@ -1,7 +1,4 @@
 %{
-move preview while dragging
-- include a number showing the count
-
 left click removes squares only if the whole line is squares
 
 number text shouldnt go off screen
@@ -27,6 +24,9 @@ function [ ] = Picross( )
 	pGrid = [];
 	vText = [];
 	hText = [];
+	
+	preview = [];
+	previewNum = [];
 	
 	ansKey =[];
 	n = [];
@@ -272,21 +272,56 @@ function [ ] = Picross( )
 		end
 		
 		f.WindowButtonUpFcn = {@unclick, m};
-% 		switch f.SelectionType
-% 			case 'normal'
-% 				pGrid(m(1),m(2)).FaceColor = ~pGrid(m(1),m(2)).FaceColor;
-% 			case 'alt'
-% 				pGrid(m(1),m(2)).UserData.x = ~pGrid(m(1),m(2)).UserData.x;
-% 				if pGrid(m(1),m(2)).UserData.x
-% 					pGrid(m(1),m(2)).UserData.xT.Visible = 'on';
-% 				else
-% 					pGrid(m(1),m(2)).UserData.xT.Visible = 'off';
-% 				end
-% 		end
+		f.WindowButtonMotionFcn = {@mouseMove, m};
 	end
 	
+	% called as the mouse moves while dragging to fill
+	function [] = mouseMove(~,~,m1)		
+		% get second point, filter bad values
+		m2 = fliplr(floor(ax.CurrentPoint([1,3]))); % row, col
+		if any(m2 < 1) || any(m2 > n)
+			if any(m2 < 0) || any(m2 > n+1)
+				return;
+			end
+			m2 = min(max(m2,1),n);	
+		end
+		
+		% pick which direction to fill
+		[~,i] = max(abs(m1 - m2));
+% 		if i == 1 % draw on a column
+% 			r = [m1(1), m2(1)];
+% 			c = m1(2)*[1 1];
+% 		else % draw on a row
+% 			c = [m1(2), m2(2)];
+% 			r = m1(1)*[1 1];
+% 		end
+		if i == 1 % draw on a column
+			r = [min(m1(1),m2(1)), max(m1(1),m2(1))];
+			c = m1(2)*[1 1];
+		else % draw on a row
+			c = [min(m1(2),m2(2)), max(m1(2),m2(2))];
+			r = m1(1)*[1 1];
+		end
+		
+		preview.XData = [1 1 3 3]/4 + [c(1) c(1) c(2) c(2)];
+		preview.YData = [1 3 3 1]/4 + [r(1) r(2) r(2) r(1)];
+		preview.Visible = 'on';
+		
+		if (i == 1 && m2(1) >= m1(1)) || (i ~= 1 && m2(2) >= m1(2)) % always puts the number at the end of the preview
+			previewNum.Position = 0.5 + [c(2) r(2)];
+		else
+			previewNum.Position = 0.5 + [c(1) r(1)];
+		end
+		previewNum.String = num2str(1 + max([abs(c(2) - c(1)), abs(r(2) - r(1))]));
+		previewNum.Visible = 'on';
+	end
+	
+	% called when the mouse is released
 	function [] = unclick(~,~,m1)
 		f.WindowButtonUpFcn = [];
+		f.WindowButtonMotionFcn = [];
+		preview.Visible = 'off';
+		previewNum.Visible = 'off';
 		
 		%get second point, filter bad values
 		m2 = fliplr(floor(ax.CurrentPoint([1,3])));
@@ -389,18 +424,10 @@ function [ ] = Picross( )
 			end
 		end
 		
-% 		if ax.OuterPosition(4) > ax.Position(4)
-% 			f.Position(4) = f.Position(4)*ax.OuterPosition(4)/ax.Position(4);
-% 		end
-% 		v = 
-% 		if any(arrayfun(@(x) x.Extent(4),vText)>2)
-% 			f.Position(4) = f.Position(4) + 10;
-% % 			pause
-% 		end
-% 		s = get(0,'ScreenSize');
-% 		if sum(f.Position([2,4])) > s(4)
-% 			f.Position(2) = s(4) - sum(f.Position([2,4])) - 5;
-% 		end
+		preview = patch([0 0 0 0],[0 0 0 0],[0.4 0.4 1], 'Visible','off','FaceAlpha',0.5','EdgeAlpha',0);
+		previewNum = text(0,0,'0','Color',[1 1 1],'BackgroundColor',preview.Color,'Visible','off','FontUnits','normalized','FontSize',1/(3*n),'HorizontalAlignment','center','Margin',eps);
+		
+		
 		axis([-1 n+1, -1.5 n+1])
 	end
 	
