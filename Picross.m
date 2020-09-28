@@ -1,14 +1,13 @@
 %{
-numbers as individual objecta so they can be turned on and off individually
-
 move preview while dragging
 - include a number showing the count
 
 left click removes squares only if the whole line is squares
 
-size controls
-
 number text shouldnt go off screen
+
+with OnOffSwitchState, pGrid.UserData.x could be removed
+- adds requirement of R2017a or later
 
 undo button
 
