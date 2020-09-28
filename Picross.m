@@ -425,7 +425,7 @@ function [ ] = Picross( )
 		end
 		
 		preview = patch([0 0 0 0],[0 0 0 0],[0.4 0.4 1], 'Visible','off','FaceAlpha',0.5','EdgeAlpha',0);
-		previewNum = text(0,0,'0','Color',[1 1 1],'BackgroundColor',preview.Color,'Visible','off','FontUnits','normalized','FontSize',1/(3*n),'HorizontalAlignment','center','Margin',eps);
+		previewNum = text(0,0,'0','Color',[1 1 1],'BackgroundColor',preview.FaceColor,'Visible','off','FontUnits','normalized','FontSize',1/(3*n),'HorizontalAlignment','center','Margin',eps);
 		
 		
 		axis([-1 n+1, -1.5 n+1])
