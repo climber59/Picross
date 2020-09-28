@@ -113,7 +113,6 @@ function [ ] = Picross( )
 		
 		%fill x's
 		for i = 1:n
-			
 			% ===================== check col =====================
 			if length(cvertNums{i})==length(vertNums{i}) && all(cvertNums{i} == vertNums{i}) % row/col matches clues
 				for j = 1:n
@@ -129,7 +128,7 @@ function [ ] = Picross( )
 					|| all(arrayfun(isMarked,pGrid(:,i)))... % all filled, doesn't match
 					|| (length(cvertNums{i}) > length(vertNums{i}) && sum(cvertNums{i}) >= sum(vertNums{i}))... % too many clusters
 					|| sum(cvertNums{i}) > sum(vertNums{i})...  % too many squares filled
-					|| (cvertNums{i} == 0 && all(arrayfun(isXed,pGrid(:,i)))) % all 'x' when there should be squares
+					|| (cvertNums{i}(1) == 0 && all(arrayfun(isXed,pGrid(:,i)))) % all 'x' when there should be squares
 				for j = 1:length(vText{i})
 					vText{i}(j).Color = [1 0 0]; % turn them all red
 				end
@@ -199,7 +198,7 @@ function [ ] = Picross( )
 					|| all(arrayfun(isMarked,pGrid(i,:)))... % all filled, doesn't match
 					|| (length(chorNums{i}) > length(horNums{i}) && sum(chorNums{i}) >= sum(horNums{i}))... % too many "clusters"
 					|| sum(chorNums{i}) > sum(horNums{i})...  % too many squares filled
-					|| (chorNums{i} == 0 && all(arrayfun(isXed,pGrid(i,:)))) % all 'x' when there should be squares
+					|| (chorNums{i}(1) == 0 && all(arrayfun(isXed,pGrid(i,:)))) % all 'x' when there should be squares
 				for j = 1:length(hText{i})
 					hText{i}(j).Color = [1 0 0];
 				end
@@ -264,7 +263,8 @@ function [ ] = Picross( )
 		end
 	end
 	
-	function [] = click(~,~)
+	% stores mouse position on click
+	function [] = mouseDown(~,~)
 		if winner
 			return
 		end
@@ -274,7 +274,7 @@ function [ ] = Picross( )
 			return;
 		end
 		
-		f.WindowButtonUpFcn = {@unclick, m};
+		f.WindowButtonUpFcn = {@mouseUp, m};
 		f.WindowButtonMotionFcn = {@mouseMove, m};
 	end
 	
@@ -317,7 +317,7 @@ function [ ] = Picross( )
 	end
 	
 	% called when the mouse is released
-	function [] = unclick(~,~,m1)
+	function [] = mouseUp(~,~,m1)
 		f.WindowButtonUpFcn = [];
 		f.WindowButtonMotionFcn = [];
 		preview.Visible = 'off';
@@ -494,7 +494,7 @@ function [ ] = Picross( )
 		f = figure(1);
 		clf
 		f.MenuBar = 'none';
-		f.WindowButtonDownFcn = @click;
+		f.WindowButtonDownFcn = @mouseDown;
 		f.Color = [1 1 1];
 		
 		ax = axes('Parent',f);
