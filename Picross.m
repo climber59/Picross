@@ -1,5 +1,12 @@
 %{
-left click removes squares only if the whole line is squares
+should the preview disappear if you move outside the puzzle?
+- would make sense as the game doesn't fill anything that way
+
+x's added by numDetect() may alter greying out of rows/cols that have
+already been checked.
+- running it twice would reduce the impact of this, but theoretically you
+could have a chain of added x's causing added x's to other rows/cols
+several times
 
 number text shouldnt go off screen
 
@@ -264,7 +271,7 @@ function [ ] = Picross( )
 	end
 	
 	% stores mouse position on click
-	function [] = mouseDown(~,~)
+	function [] = mouseClick(~,~)
 		if winner
 			return
 		end
@@ -274,7 +281,7 @@ function [ ] = Picross( )
 			return;
 		end
 		
-		f.WindowButtonUpFcn = {@mouseUp, m};
+		f.WindowButtonUpFcn = {@mouseRelease, m};
 		f.WindowButtonMotionFcn = {@mouseMove, m};
 	end
 	
@@ -317,13 +324,13 @@ function [ ] = Picross( )
 	end
 	
 	% called when the mouse is released
-	function [] = mouseUp(~,~,m1)
+	function [] = mouseRelease(~,~,m1)
 		f.WindowButtonUpFcn = [];
 		f.WindowButtonMotionFcn = [];
 		preview.Visible = 'off';
 		previewNum.Visible = 'off';
 		
-		%get second point, filter bad values
+		% get second point, filter bad values
 		m2 = fliplr(floor(ax.CurrentPoint([1,3])));
 		if any(m2 < 1) || any(m2 > n)
 			if any(m2 < 0) || any(m2 > n+1)
@@ -351,7 +358,6 @@ function [ ] = Picross( )
 					pGrid(m1(1),m1(2)).UserData.filled = false;
 			end
 		else
-		
 			% pick which direction to fill
 			[~,i] = max(abs(m1-m2));
 			if i==1 % draw on a column
@@ -361,27 +367,42 @@ function [ ] = Picross( )
 				c = min(m1(2),m2(2)):max(m1(2),m2(2));
 				r = m1(1)*ones(size(c));
 			end
-
+			
+			isMarked = @(y) y.UserData.filled || y.UserData.x;
+			isFilled = @(y) y.UserData.filled;
+			isXed = @(y) y.UserData.x;
+			
+			ind = sub2ind(size(pGrid),r,c);
 			% fill
 			switch f.SelectionType
 				case 'normal'
-					s = pGrid(m1(1),m1(2)).UserData.filled;
-					for i = 1:length(c)
-						if pGrid(r(i),c(i)).UserData.filled == s && ~pGrid(r(i),c(i)).UserData.x
-							pGrid(r(i),c(i)).FaceColor = ~pGrid(r(i),c(i)).FaceColor;
-							pGrid(r(i),c(i)).UserData.filled = ~s;
+					% add squares if any of the selected area is not square
+					% remove squares if all are already filled
+					if all(arrayfun(isFilled,pGrid(ind))) % all filled, remove
+						for i = 1:length(ind)
+							pGrid(ind(i)).FaceColor = [1 1 1];
+							pGrid(ind(i)).UserData.filled = false;
+						end
+					else % add sqaures to any that aren't Xed
+						ind = ind(~arrayfun(isXed,pGrid(ind)));
+						for i = 1:length(ind)
+							pGrid(ind(i)).FaceColor = [0 0 0];
+							pGrid(ind(i)).UserData.filled = true;
 						end
 					end
 				case 'alt'
-					s = pGrid(m1(1),m1(2)).UserData.x;
-					for i = 1:length(c)
-						if pGrid(r(i),c(i)).UserData.x == s && ~pGrid(r(i),c(i)).UserData.filled
-							pGrid(r(i),c(i)).UserData.x = ~pGrid(r(i),c(i)).UserData.x;
-							if pGrid(r(i),c(i)).UserData.x
-								pGrid(r(i),c(i)).UserData.xT.Visible = 'on';
-							else
-								pGrid(r(i),c(i)).UserData.xT.Visible = 'off';
-							end
+					% add x if any of the selected area is not x
+					% remove x if all are already xed
+					if all(arrayfun(isXed,pGrid(ind))) % all Xed, remove
+						for i = 1:length(ind)
+							pGrid(ind(i)).UserData.x = false;
+							pGrid(ind(i)).UserData.xT.Visible = 'off';
+						end
+					else % add X to any that aren't filled
+						ind = ind(~arrayfun(isMarked,pGrid(ind)));
+						for i = 1:length(ind)
+							pGrid(ind(i)).UserData.x = true;
+							pGrid(ind(i)).UserData.xT.Visible = 'on';
 						end
 					end
 			end
@@ -494,7 +515,7 @@ function [ ] = Picross( )
 		f = figure(1);
 		clf
 		f.MenuBar = 'none';
-		f.WindowButtonDownFcn = @mouseDown;
+		f.WindowButtonDownFcn = @mouseClick;
 		f.Color = [1 1 1];
 		
 		ax = axes('Parent',f);
