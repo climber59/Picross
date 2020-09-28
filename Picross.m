@@ -17,11 +17,9 @@ numDetect() shouldn't have to check every row/column every mouseclick
 - a single click could fill a whole row, so it will always have to check
 many things
 
-ui to change grid size
-- allow rectangles?
-
 number text shouldnt go off screen
 - I don't know if I fixed this or if it's just incredibly unlikely now
+- it can happen if you generate an overly large puzzle
 %}
 function [ ] = Picross( )
 	f = [];
@@ -45,7 +43,7 @@ function [ ] = Picross( )
 	figureSetup();
 	newGame();
 	
-	
+	% called by 'New' button. creates a new puzzle
 	function [] = newGame(~,~)
 		cla;
 		
@@ -271,7 +269,7 @@ function [ ] = Picross( )
 		end
 	end
 	
-	% stores mouse position on click
+	% stores mouse position on click and enables other mouse callbacks
 	function [] = mouseClick(~,~)
 		if winner
 			return
@@ -326,7 +324,7 @@ function [ ] = Picross( )
 		end
 	end
 	
-	% called when the mouse is released
+	% called when the mouse is released. Fills/removes the squares and x's
 	function [] = mouseRelease(~,~,m1)
 		f.WindowButtonUpFcn = [];
 		f.WindowButtonMotionFcn = [];
@@ -456,6 +454,7 @@ function [ ] = Picross( )
 		axis([-1 n+1, -1.5 n+1])
 	end
 	
+	% generates the binary grid for the puzzle and the numbers for the clues
 	function [] = randGen()
 		%generate grid
 % 		ansKey = [zeros(1,n); zeros(n-1,1), randi(2,n-1,n-1) - 1]; % first row and col as 0, for testing special cases
@@ -487,7 +486,6 @@ function [ ] = Picross( )
 			if isempty(vertNums{i})
 				vertNums{i} = 0;
 			end
-			
 			
 			% go right a row
 			j = 1;
