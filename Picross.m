@@ -290,8 +290,10 @@ function [ ] = Picross( )
 		% get second point, filter bad values
 		m2 = fliplr(floor(ax.CurrentPoint([1,3]))); % row, col
 		if any(m2 < 1) || any(m2 > n)
-			if any(m2 < 0) || any(m2 > n+1)
-				return;
+			if any(m2 < 0) || any(m2 > n+1)				
+				preview.Visible = 'off';
+				previewNum.Visible = 'off';
+				return
 			end
 			m2 = min(max(m2,1),n);	
 		end
@@ -317,7 +319,7 @@ function [ ] = Picross( )
 			end
 			previewNum.String = num2str(num);
 			previewNum.Visible = 'on';
-		else			
+		else
 			preview.Visible = 'off';
 			previewNum.Visible = 'off';
 		end
