@@ -65,8 +65,8 @@ function [ ] = Picross( )
 		
 		
 		% get numbers
-		cvertNums = {};
-		chorNums = {};
+		cvertNums = cell(1,n);
+		chorNums = cell(n,1);
 		for i = 1:n
 			% go down a column
 			j = 1;
@@ -118,9 +118,9 @@ function [ ] = Picross( )
 		%fill x's
 		for i = 1:n
 			% ===================== check col =====================
-			if length(cvertNums{i})==length(vertNums{i}) && all(cvertNums{i} == vertNums{i})
+			if length(cvertNums{i})==length(vertNums{i}) && all(cvertNums{i} == vertNums{i}) % row/col matches clues
 				for j = 1:n
-					if ~pGrid(j,i).UserData.filled && ~pGrid(j,i).UserData.x
+					if ~isFilled(pGrid(j,i)) && ~isXed(pGrid(j,i))
 						pGrid(j,i).UserData.x = true;
 						pGrid(j,i).UserData.xT.Visible = 'on';
 					end
@@ -128,7 +128,9 @@ function [ ] = Picross( )
 				for j = 1:length(vText{i})
 					vText{i}(j).Color = 0.75*ones(1,3);
 				end
-			elseif all(arrayfun(isMarked,pGrid(:,i))) % all filled, doesn't match
+			elseif all(arrayfun(isMarked,pGrid(:,i)))... % all filled, doesn't match
+					|| length(cvertNums{i}) > length(vertNums{i})... % too many "clusters"
+					|| sum(vertNums{i}) > sum(vertNums{i})  % too many squares filled
 				for j = 1:length(vText{i})
 					vText{i}(j).Color = [1 0 0];
 				end
@@ -194,7 +196,9 @@ function [ ] = Picross( )
 				for j = 1:length(hText{i})
 					hText{i}(j).Color = 0.75*ones(1,3); % grey out
 				end
-			elseif all(arrayfun(isMarked,pGrid(i,:)))
+			elseif all(arrayfun(isMarked,pGrid(i,:)))... % all filled, doesn't match
+					|| length(chorNums{i}) > length(horNums{i})... % too many "clusters"
+					|| sum(chorNums{i}) > sum(horNums{i})  % too many squares filled
 				for j = 1:length(hText{i})
 					hText{i}(j).Color = [1 0 0];
 				end
