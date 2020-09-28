@@ -288,13 +288,6 @@ function [ ] = Picross( )
 		
 		% pick which direction to fill
 		[~,i] = max(abs(m1 - m2));
-% 		if i == 1 % draw on a column
-% 			r = [m1(1), m2(1)];
-% 			c = m1(2)*[1 1];
-% 		else % draw on a row
-% 			c = [m1(2), m2(2)];
-% 			r = m1(1)*[1 1];
-% 		end
 		if i == 1 % draw on a column
 			r = [min(m1(1),m2(1)), max(m1(1),m2(1))];
 			c = m1(2)*[1 1];
@@ -302,18 +295,22 @@ function [ ] = Picross( )
 			c = [min(m1(2),m2(2)), max(m1(2),m2(2))];
 			r = m1(1)*[1 1];
 		end
-		
-		preview.XData = [1 1 3 3]/4 + [c(1) c(1) c(2) c(2)];
-		preview.YData = [1 3 3 1]/4 + [r(1) r(2) r(2) r(1)];
-		preview.Visible = 'on';
-		
-		if (i == 1 && m2(1) >= m1(1)) || (i ~= 1 && m2(2) >= m1(2)) % always puts the number at the end of the preview
-			previewNum.Position = 0.5 + [c(2) r(2)];
-		else
-			previewNum.Position = 0.5 + [c(1) r(1)];
+		num = 1 + max([abs(c(2) - c(1)), abs(r(2) - r(1))]);
+		if num > 1 % only display if more than 1 square
+			preview.XData = [1 1 3 3]/4 + [c(1) c(1) c(2) c(2)];
+			preview.YData = [1 3 3 1]/4 + [r(1) r(2) r(2) r(1)];
+			preview.Visible = 'on';
+			if (i == 1 && m2(1) >= m1(1)) || (i ~= 1 && m2(2) >= m1(2)) % always puts the number at the end of the preview near the mouse
+				previewNum.Position = 0.5 + [c(2) r(2)];
+			else
+				previewNum.Position = 0.5 + [c(1) r(1)];
+			end
+			previewNum.String = num2str(num);
+			previewNum.Visible = 'on';
+		else			
+			preview.Visible = 'off';
+			previewNum.Visible = 'off';
 		end
-		previewNum.String = num2str(1 + max([abs(c(2) - c(1)), abs(r(2) - r(1))]));
-		previewNum.Visible = 'on';
 	end
 	
 	% called when the mouse is released
