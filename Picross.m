@@ -1,14 +1,9 @@
 %{
-should the preview disappear if you move outside the puzzle?
-- would make sense as the game doesn't fill anything that way
-
 x's added by numDetect() may alter greying out of rows/cols that have
 already been checked.
 - running it twice would reduce the impact of this, but theoretically you
 could have a chain of added x's causing added x's to other rows/cols
 several times
-
-number text shouldnt go off screen
 
 with OnOffSwitchState, pGrid.UserData.x could be removed
 - adds requirement of R2017a or later
@@ -24,6 +19,9 @@ many things
 
 ui to change grid size
 - allow rectangles?
+
+number text shouldnt go off screen
+- I don't know if I fixed this or if it's just incredibly unlikely now
 %}
 function [ ] = Picross( )
 	f = [];
@@ -34,6 +32,9 @@ function [ ] = Picross( )
 	
 	preview = [];
 	previewNum = [];
+	checkmark = [];
+	
+	gridSize = [];
 	
 	ansKey =[];
 	n = [];
@@ -48,14 +49,14 @@ function [ ] = Picross( )
 	function [] = newGame(~,~)
 		cla;
 		
-		n = 10;
+		n = str2double(gridSize.String);
+		if isnan(n)
+			n = 10;
+		elseif n < 1
+			n = 1;
+		end
+		gridSize.String = num2str(n);
 		randGen();
-% 		vertNums
-% 		horNums
-		
-% 		vertNums = {[3 2 1] [1 2 2 2] [3 1 2 2] [3 2 3] [4 3] [2 2 2] [1 1 3 1] [2 2 2 ] [1 1 4] [1 1 2 2] [1 1 2 3] [1 1 2 2] [1 1 2 1] [1 1 2 2] [1 1 2 4]};
-% 		horNums = {[2] [1 8] [2 3] [1 3] [5 8] [2 4] [4 ] [3 3] [2 7] [1 6] [5 2] [4 2 2] [3 2 1] [3 2 1] [2 1 2 1]};
-
 		
 		build();
 		numDetect();
@@ -266,7 +267,7 @@ function [ ] = Picross( )
 		isGrey = @(y) y.Color(1) == 0.75;
 		winner = all(arrayfun(@(i) all(arrayfun(isGrey,vText{i})),1:n)) && all(arrayfun(@(i) all(arrayfun(isGrey,hText{i})),1:n)); % checks that all hints are greyed out
 		if winner
-			patch(1.5+(n-1)*[0 9 37 87 100 42]/100,1.5+(n-1)*[72 59 78 3 12 100]/100,[0 1 0],'FaceAlpha',0.5,'EdgeColor','none');
+			checkmark.Visible = true;
 		end
 	end
 	
@@ -450,6 +451,7 @@ function [ ] = Picross( )
 		preview = patch([0 0 0 0],[0 0 0 0],[0.4 0.4 1], 'Visible','off','FaceAlpha',0.5','EdgeAlpha',0);
 		previewNum = text(0,0,'0','Color',[1 1 1],'BackgroundColor',preview.FaceColor,'Visible','off','FontUnits','normalized','FontSize',1/(3*n),'HorizontalAlignment','center','Margin',eps);
 		
+		checkmark = patch(1 + n*[0 9 37 87 100 42]/100, 1 + n*[72 59 78 3 12 100]/100,[0 1 0],'FaceAlpha',0.5,'EdgeColor','none','Visible','off');
 		
 		axis([-1 n+1, -1.5 n+1])
 	end
@@ -507,15 +509,27 @@ function [ ] = Picross( )
 				horNums{i} = 0;
 			end
 		end
-		
-				%test
-% 		vertNums{:}
-% 		horNums{:}
 	end
 	
+	% resets the puzzle
+	function [] = reset(~,~)
+		winner = false;
+		checkmark.Visible = 'off';
+		
+		for i = 1:numel(pGrid)
+			pGrid(i).FaceColor = [1 1 1];
+			pGrid(i).UserData.filled = false;
+			pGrid(i).UserData.x = false;
+			pGrid(i).UserData.xT.Visible = 'off';
+		end
+		
+		numDetect();
+	end
+	
+	% creates the figure and UI objects on the figure
 	function [] = figureSetup()
 		f = figure(1);
-		clf
+		clf('reset')
 		f.MenuBar = 'none';
 		f.WindowButtonDownFcn = @mouseClick;
 		f.Color = [1 1 1];
@@ -536,11 +550,41 @@ function [ ] = Picross( )
 		ng = uicontrol(...
 			'Parent',f,...
 			'Style','pushbutton',...
-			'String','New Game',...
+			'String','New',...
 			'Units','normalized',...
 			'Position',[0.05 0.45 0.1 0.1],...
-			'FontSize',14,...
+			'FontUnits','normalized',...
+			'FontSize',0.5,...
 			'Callback',@newGame);
+		
+		resetBtn = uicontrol(...
+			'Parent',f,...
+			'Style','pushbutton',...
+			'String','Reset',...
+			'Units','normalized',...
+			'Position',[0.05 0.325 0.1 0.1],...
+			'FontUnits','normalized',...
+			'FontSize',1/3,...
+			'Callback',@reset);
+		
+		gridSizeLbl = uicontrol(...
+			'Parent',f,...
+			'Style','text',...
+			'String','Size',...
+			'Units','normalized',...
+			'Position',[0.0375 0.25 0.075 0.05],...
+			'FontUnits','normalized',...
+			'FontSize',0.75);
+		
+		gridSize = uicontrol(...
+			'Parent',f,...
+			'Style','edit',...
+			'String','10',...
+			'Units','normalized',...
+			'ToolTip','Large grids will cause slowdowns',...
+			'Position',[0.1125 0.25 0.05 0.05],...
+			'FontUnits','normalized',...
+			'FontSize',0.75);
 		
 		% makes the cursor look vaguely like a pencil
 % 		asdf = nan*ones(16);
