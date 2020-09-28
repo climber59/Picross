@@ -113,6 +113,7 @@ function [ ] = Picross( )
 		
 		%fill x's
 		for i = 1:n
+			
 			% ===================== check col =====================
 			if length(cvertNums{i})==length(vertNums{i}) && all(cvertNums{i} == vertNums{i}) % row/col matches clues
 				for j = 1:n
@@ -127,7 +128,8 @@ function [ ] = Picross( )
 			elseif (length(cvertNums{i}) == length(vertNums{i}) && sum(cvertNums{i}) == sum(vertNums{i}) && ~all(cvertNums{i} == vertNums{i}))... % correct # of clusters and squares, but they don't match the clues
 					|| all(arrayfun(isMarked,pGrid(:,i)))... % all filled, doesn't match
 					|| (length(cvertNums{i}) > length(vertNums{i}) && sum(cvertNums{i}) >= sum(vertNums{i}))... % too many clusters
-					|| sum(cvertNums{i}) > sum(vertNums{i})  % too many squares filled
+					|| sum(cvertNums{i}) > sum(vertNums{i})...  % too many squares filled
+					|| (cvertNums{i} == 0 && all(arrayfun(isXed,pGrid(:,i)))) % all 'x' when there should be squares
 				for j = 1:length(vText{i})
 					vText{i}(j).Color = [1 0 0]; % turn them all red
 				end
@@ -196,7 +198,8 @@ function [ ] = Picross( )
 			elseif (length(chorNums{i})==length(horNums{i}) && sum(chorNums{i}) == sum(horNums{i})  && ~all(chorNums{i} == horNums{i}))... % correct # of clusters and squares, but they don't match the clues
 					|| all(arrayfun(isMarked,pGrid(i,:)))... % all filled, doesn't match
 					|| (length(chorNums{i}) > length(horNums{i}) && sum(chorNums{i}) >= sum(horNums{i}))... % too many "clusters"
-					|| sum(chorNums{i}) > sum(horNums{i})  % too many squares filled
+					|| sum(chorNums{i}) > sum(horNums{i})...  % too many squares filled
+					|| (chorNums{i} == 0 && all(arrayfun(isXed,pGrid(i,:)))) % all 'x' when there should be squares
 				for j = 1:length(hText{i})
 					hText{i}(j).Color = [1 0 0];
 				end
@@ -430,6 +433,7 @@ function [ ] = Picross( )
 	
 	function [] = randGen()
 		%generate grid
+% 		ansKey = [zeros(1,n); zeros(n-1,1), randi(2,n-1,n-1) - 1]; % first row and col as 0, for testing special cases
 		ansKey = randi(2,n)-1;
 		if sum(sum(ansKey)) < (n^2)/2
 			ansKey = ~ansKey;
