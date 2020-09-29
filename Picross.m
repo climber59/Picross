@@ -529,6 +529,8 @@ function [ ] = Picross( )
 		f = figure(1);
 		clf('reset')
 		f.MenuBar = 'none';
+		f.Name = 'Picross';
+		f.NumberTitle = 'off';
 		f.WindowButtonDownFcn = @mouseClick;
 		f.Color = [1 1 1];
 		
